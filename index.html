@@ -19,6 +19,7 @@ nav button{flex:1;background:none;color:var(--mu);border-radius:0;padding:12px 2
 .msgs{display:flex;flex-direction:column;gap:6px;margin:10px 0;max-height:48vh;overflow-y:auto}
 .m{padding:8px 12px;border-radius:14px;max-width:80%;background:var(--card);border:1px solid var(--bd);overflow-wrap:anywhere}.m.me{align-self:flex-end;background:var(--ac);color:#fff;border:0}.m.pl{border:2px dashed var(--ac);background:var(--card);color:var(--tx)}
 .bar{display:flex;gap:8px}.bar input{margin:0}.av{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--bd);flex:none}
+.chk{display:inline-block;margin:3px 4px 3px 0;font-size:14px}.chk input{width:auto;margin:0 4px 0 0}
 </style></head><body><main id="app">Cargando…</main><nav id="nav"></nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
@@ -45,7 +46,7 @@ async function init(){
  if(!session)return authView();
  const {data}=await sb.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
  if(!data)return setupView(session.user.id);
- me=data;go("d");listen();loadUnread()}
+ me=data;go("d");listen();loadUnread();try{if(localStorage.getItem("loc"))locOn(1)}catch(e){}}
 sb.auth.onAuthStateChange((ev)=>{if(ev=="SIGNED_OUT"){if(gsub){sb.removeChannel(gsub);gsub=null}unread={};init()}});
 
 function authView(){$("#nav").innerHTML="";A().innerHTML=`<div style="text-align:center"><img src="logo.jpg" alt="San Valentín" style="width:140px;border-radius:24px"><h1>San Valentín</h1></div><p class=mu>Citas 100% gratis. Sin pagar por ver likes ni por chatear.</p><div class="card pad">
@@ -60,29 +61,29 @@ function setupView(uid){A().innerHTML=`<h1>Crea tu perfil</h1><div class="card p
 <label>Nombre</label><input id=n><label>Edad (18+)</label><input id=a type=number min=18 max=99>
 <label>Ciudad</label><input id=c><label>Qué buscas</label><select id=i><option>Algo serio</option><option>Conocer gente</option><option>Casual</option></select>
 <label>Mi plan ideal</label><input id=q1 maxlength=80><label>Algo que me hace reír</label><input id=q2 maxlength=80><label>Busco a alguien que…</label><input id=q3 maxlength=80>
-<label>Foto</label><input id=f type=file accept="image/*"><button id=sv onclick="saveProf('${uid}')" style="width:100%">Guardar</button></div>`}
+${extraFields()}<label>Foto</label><input id=f type=file accept="image/*"><button id=sv onclick="saveProf('${uid}')" style="width:100%">Guardar</button></div>`}
 function shrink(file){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no("Foto inválida"),"image/jpeg",.6)};im.onerror=()=>no("Foto inválida");im.src=URL.createObjectURL(file)})}
 async function saveProf(uid){const g=x=>$("#"+x).value.trim(),f=$("#f").files[0];
  if(!g("n")||!g("c")||g("a")<18)return alert("Completa nombre, ciudad y edad (18+).");
- if(!f)return alert("Sube una foto.");$("#sv").disabled=true;
+ if(!f)return alert("Sube una foto.");const ex=readExtra();if(!ex)return;$("#sv").disabled=true;
  try{const b=await shrink(f);let photo_url;
   if(WORKER_URL.startsWith("http")){const {data:{session}}=await sb.auth.getSession();
    const u=await fetch(WORKER_URL+"/upload",{method:"POST",headers:{Authorization:"Bearer "+session.access_token,"Content-Type":"image/jpeg"},body:b});
    if(!u.ok)throw new Error("No se pudo subir la foto: "+await u.text());photo_url=(await u.json()).url}
   else{const path=`${uid}/${Date.now()}.jpg`,u=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg"});
    if(u.error)throw u.error;photo_url=sb.storage.from("photos").getPublicUrl(path).data.publicUrl}
-  const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url});
+  const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url,...ex});
   if(r.error)throw r.error;init()}catch(e){err(e);$("#sv").disabled=false}}
 
 function nav(){$("#nav").innerHTML=[["d","🔥 Descubrir"],["l","💌 Likes"],["c","💬 Chats"],["v","📍 Planes"],["p","👤 Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')">${l}${k=="c"&&tot()?`<span style="background:#d6283c;color:#fff;border-radius:10px;padding:0 6px;font-size:12px;margin-left:4px">${tot()}</span>`:""}</button>`).join("")}
 function go(t){document.title="San Valentín";tab=t;ch=null;if(sub){sb.removeChannel(sub);sub=null}nav();({d:disc,l:likes,c:chats,v:places,p:prof})[t]()}
-const card=(p,x="")=>`<div class=card>${car(p)}<div class=pad><b style="font-size:19px">${esc(p.name)}, ${p.age}</b> ${p.verified?"✅":""}<br><span class=tag>${esc(p.intent)}</span><span class=mu>${esc(p.city)}</span>${[p.q1,p.q2,p.q3].filter(Boolean).map(q=>`<p style="margin:8px 0 0">${esc(q)}</p>`).join("")}${x}</div></div>`;
+const card=(p,x="")=>`<div class=card>${car(p)}<div class=pad><b style="font-size:19px">${esc(p.name)}, ${p.age}</b> ${p.verified?"✅":""}<br><span class=tag>${esc(p.intent)}</span><span class=mu>${esc(p.city)}${p.km_band?" · "+esc(p.km_band):""}</span><div style="margin-top:8px">${extraTags(p)}</div>${[p.q1,p.q2,p.q3].filter(Boolean).map(q=>`<p style="margin:8px 0 0">${esc(q)}</p>`).join("")}${x}</div></div>`;
 const myIds=async()=>{const {data}=await sb.from("swipes").select("to_id").eq("from_id",me.id);return (data||[]).map(r=>r.to_id)};
 
-async function disc(){A().innerHTML="<h1>Descubrir</h1>Cargando…";const ids=await myIds();ids.push(me.id);
- const {data,error}=await sb.from("profiles").select("*").eq("city",me.city).not("id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(1);
+async function disc(){A().innerHTML="<h1>Descubrir</h1>Cargando…";
+ const {data,error}=await sb.rpc("next_profile",{max_km:F.km?+F.km:null,amin:F.amin,amax:F.amax,want:F.want||null});
  if(error)return err(error);const p=data[0];
- A().innerHTML="<h1>Descubrir</h1>"+(p?card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Me interesa 💘</button></div><p class=mu style="text-align:center"><a href="#" onclick="report('${p.id}');return false">Reportar</a> · <a href="#" onclick="blockUser('${p.id}');return false">Bloquear</a></p>`):`<div class="card pad">Ya viste a todos en tu ciudad por ahora. Vuelve pronto 🌙</div>`)}
+ A().innerHTML="<h1>Descubrir</h1>"+filtersUI()+(p?card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Me interesa 💘</button></div><p class=mu style="text-align:center"><a href="#" onclick="report('${p.id}');return false">Reportar</a> · <a href="#" onclick="blockUser('${p.id}');return false">Bloquear</a></p>`):`<div class="card pad">Ya viste a todos en tu ciudad por ahora. Vuelve pronto 🌙</div>`)}
 async function swipe(id,liked){const r=await sb.from("swipes").insert({from_id:me.id,to_id:id,liked});if(r.error)return err(r.error);
  if(liked){const {data}=await sb.from("matches").select("id").or(`and(a.eq.${me.id},b.eq.${id}),and(a.eq.${id},b.eq.${me.id})`);if(data?.length)alert("¡Es un match! 🎉 Escríbele en Chats.")}
  tab=="l"?likes():disc()}
@@ -130,15 +131,43 @@ async function places(){A().innerHTML="<h1>Planes en tu ciudad</h1>Cargando…";
  +(ad?`<div class="card pad"><span class=tag>Patrocinado</span><br><b>${esc(ad.title)}</b><p>${esc(ad.body)}</p>${/^https?:/.test(ad.link||"")?`<a href="${esc(ad.link)}" target=_blank rel=noopener>Ver más</a>`:""}</div>`:"")
  +"<h2 style='font-size:18px'>Eventos</h2>"+(e.data?.length?e.data.map(x=>`<div class="card pad"><b>${esc(x.title)}</b>${x.sponsor?` <span class=tag>Con ${esc(x.sponsor)}</span>`:""}<p class=mu>${new Date(x.starts_at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})}</p><p>${esc(x.description)}</p></div>`).join(""):none("Aún no hay eventos."))
  +"<h2 style='font-size:18px'>Lugares</h2>"+(v.data?.length?v.data.map(x=>`<div class="card pad"><b>${esc(x.name)}</b> ${x.partner?"<span class=tag>⭐ Aliado</span>":""}<br><span class=mu>${esc(x.category)} · ${esc(x.address)}</span>${x.offer?`<p>🎁 ${esc(x.offer)}</p>`:""}</div>`).join(""):none("Aún no hay lugares."))}
+const INTS=["Playa","Beber","Bailar","Series y TV","Cine","Gym","Viajar","Música","Cocinar","Mascotas","Leer","Deportes","Videojuegos","Naturaleza","Café","Fotografía"];
+const OPT={ed:["Bachillerato","Técnico/tecnológico","Universitario en curso","Universitario titulado","Posgrado"],dr:["No bebo","Bebo socialmente","Bebo frecuentemente"],sm:["No fumo","Fumo ocasionalmente","Fumo"],wk:["No hago ejercicio","Ejercicio a veces","Ejercicio frecuente"],ps:["Tímido/a","Ambivertido/a","Extrovertido/a"]};
+const sel=(id,lab,v)=>`<label>${lab}</label><select id=${id}><option value="">Prefiero no decir</option>${OPT[id].map(o=>`<option${o==v?" selected":""}>${o}</option>`).join("")}</select>`;
+const extraFields=(p={})=>`<label>Estatura en cm (opcional)</label><input id=ht type=number min=120 max=230 value="${p.height_cm||""}">`+sel("ed","Nivel de estudios",p.education)+sel("dr","¿Bebes alcohol?",p.drinks)+sel("sm","¿Fumas?",p.smokes)+sel("wk","Ejercicio",p.workout)+sel("ps","Personalidad",p.personality)+`<label>Me gusta (hasta 6)</label><div style="margin-bottom:10px">${INTS.map(x=>`<label class=chk><input type=checkbox name=int value="${x}"${(p.interests||[]).includes(x)?" checked":""}>${x}</label>`).join("")}</div>`;
+function readExtra(){const v=id=>$("#"+id).value||null,h=+$("#ht").value||null;
+ if(h&&(h<120||h>230)){alert("La estatura debe estar entre 120 y 230 cm.");return null}
+ return {height_cm:h,education:v("ed"),drinks:v("dr"),smokes:v("sm"),workout:v("wk"),personality:v("ps"),interests:[...document.querySelectorAll("input[name=int]:checked")].map(i=>i.value).slice(0,6)}}
+const extraTags=p=>[p.height_cm?`📏 ${p.height_cm} cm`:"",p.education?`🎓 ${p.education}`:"",p.drinks?`🍷 ${p.drinks}`:"",p.smokes?`🚬 ${p.smokes}`:"",p.workout?`💪 ${p.workout}`:"",p.personality?`🙂 ${p.personality}`:"",...(p.interests||[])].filter(Boolean).map(t=>`<span class=tag>${esc(t)}</span>`).join("");
+let F={amin:18,amax:60,km:"",want:""};try{F={...F,...JSON.parse(localStorage.getItem("f")||"{}")}}catch(e){}
+const filtersUI=()=>`<details class="card pad" style="margin-bottom:12px"><summary><b>Filtros</b> <span class=mu>${F.amin}–${F.amax} años · ${F.km?"hasta "+F.km+" km":"toda mi ciudad"}${F.want?" · "+esc(F.want):""}</span></summary><label>Edad mínima</label><input id=fa type=number min=18 max=99 value="${F.amin}"><label>Edad máxima</label><input id=fb type=number min=18 max=99 value="${F.amax}"><label>Distancia (requiere activar cercanía en tu perfil)</label><select id=fk><option value="">Toda mi ciudad</option>${[1,5,10,25].map(k=>`<option value=${k}${F.km==k?" selected":""}>Hasta ${k} km</option>`).join("")}</select><label>Qué busca</label><select id=fw><option value="">Cualquiera</option>${["Algo serio","Conocer gente","Casual"].map(x=>`<option${F.want==x?" selected":""}>${x}</option>`).join("")}</select><button onclick="applyF()" style="width:100%">Aplicar</button></details>`;
+function applyF(){F={amin:+$("#fa").value||18,amax:+$("#fb").value||99,km:$("#fk").value,want:$("#fw").value};try{localStorage.setItem("f",JSON.stringify(F))}catch(e){}disc()}
+function locOn(silent){if(!navigator.geolocation)return silent||alert("Tu dispositivo no permite ubicación.");
+ navigator.geolocation.getCurrentPosition(async pos=>{const r2=x=>Math.round(x*100)/100;
+  const r=await sb.from("locations").upsert({user_id:me.id,lat:r2(pos.coords.latitude),lng:r2(pos.coords.longitude),updated_at:new Date().toISOString()});
+  if(r.error)return silent||err(r.error);try{localStorage.setItem("loc","1")}catch(e){}
+  if(!silent){alert("Listo. Guardamos solo tu ubicación aproximada (~1 km). Nadie ve tu ubicación exacta.");prof()}},
+  ()=>silent||alert("No pudimos obtener tu ubicación. Revisa el permiso del navegador."),{maximumAge:600000,timeout:15000})}
+async function locOff(){await sb.from("locations").delete().eq("user_id",me.id);try{localStorage.removeItem("loc")}catch(e){}prof()}
+const POSES=["tu mano abierta junto a tu cara","un pulgar arriba","dos dedos haciendo la V"];
+function verifyView(){const pose=POSES[Math.floor(Math.random()*POSES.length)];
+ A().innerHTML=`<button class=s onclick="prof()">← Volver</button><h1>Verificar mi perfil</h1><div class="card pad"><p>Tómate una selfie <b>ahora</b> mostrando <b>${pose}</b>. Solo la ve el equipo de San Valentín, nunca otros usuarios, y sirve para dar la insignia ✅.</p><input id=sf type=file accept="image/*" capture="user"><button onclick="sendSelfie('${pose}')" style="width:100%">Enviar selfie</button></div>`}
+async function sendSelfie(pose){const f=$("#sf").files[0];if(!f)return alert("Toma o elige tu selfie.");
+ try{const b=await shrink(f),path=`${me.id}/${Date.now()}.jpg`;await sb.from("verifications").delete().eq("user_id",me.id);
+  const u=await sb.storage.from("selfies").upload(path,b,{contentType:"image/jpeg"});if(u.error)throw u.error;
+  const r=await sb.from("verifications").insert({user_id:me.id,selfie_path:path,pose});if(r.error)throw r.error;
+  alert("Selfie enviada. La revisaremos pronto.");prof()}catch(e){err(e)}}
+const extrasMgr=()=>`<div class="card pad"><b>Seguridad y cercanía</b><p>${me.verified?"✅ Perfil verificado":`<span id=vs></span><button class=s onclick="verifyView()">✅ Verificar mi perfil</button>`}</p><p>${localStorage.getItem("loc")?`📍 Cercanía activa · <a href="#" onclick="locOff();return false">Desactivar</a>`:`<button class=s onclick="locOn()">📍 Activar cercanía</button>`}</p><p class=mu>La cercanía es opcional: guardamos solo una ubicación aproximada y los demás ven rangos como "a menos de 5 km", nunca tu ubicación.</p></div>`;
 async function blockUser(id){if(!confirm("¿Bloquear a esta persona? Ya no podrán verse ni escribirse."))return;
  const r=await sb.rpc("block_user",{target:id});if(r.error)return err(r.error);alert("Persona bloqueada.");go(ch?"c":tab)}
 async function delAccount(){if(prompt("Esto borra para siempre tu cuenta, fotos, matches y mensajes. Escribe BORRAR para confirmar:")!=="BORRAR")return;
  try{const {data:f}=await sb.storage.from("photos").list(me.id);if(f?.length)await sb.storage.from("photos").remove(f.map(x=>me.id+"/"+x.name));
   const r=await sb.rpc("delete_my_account");if(r.error)throw r.error;await sb.auth.signOut();alert("Tu cuenta fue eliminada.")}catch(e){err(e)}}
 const normCity=s=>s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-function editProf(){A().innerHTML=`<h1>Editar perfil</h1><div class="card pad"><label>Nombre</label><input id=n value="${esc(me.name)}"><label>Edad (18+)</label><input id=a type=number min=18 max=99 value="${me.age}"><label>Ciudad (solo el nombre, ej: quito)</label><input id=c value="${esc(me.city)}"><label>Qué buscas</label><select id=i>${["Algo serio","Conocer gente","Casual"].map(x=>`<option${x==me.intent?" selected":""}>${x}</option>`).join("")}</select><label>Mi plan ideal</label><input id=q1 maxlength=80 value="${esc(me.q1)}"><label>Algo que me hace reír</label><input id=q2 maxlength=80 value="${esc(me.q2)}"><label>Busco a alguien que…</label><input id=q3 maxlength=80 value="${esc(me.q3)}"><div class=row><button class=s onclick="prof()" style="flex:1">Cancelar</button><button onclick="saveEdit()" style="flex:1">Guardar</button></div></div>`}
+function editProf(){A().innerHTML=`<h1>Editar perfil</h1><div class="card pad"><label>Nombre</label><input id=n value="${esc(me.name)}"><label>Edad (18+)</label><input id=a type=number min=18 max=99 value="${me.age}"><label>Ciudad (solo el nombre, ej: quito)</label><input id=c value="${esc(me.city)}"><label>Qué buscas</label><select id=i>${["Algo serio","Conocer gente","Casual"].map(x=>`<option${x==me.intent?" selected":""}>${x}</option>`).join("")}</select><label>Mi plan ideal</label><input id=q1 maxlength=80 value="${esc(me.q1)}"><label>Algo que me hace reír</label><input id=q2 maxlength=80 value="${esc(me.q2)}"><label>Busco a alguien que…</label><input id=q3 maxlength=80 value="${esc(me.q3)}">${extraFields(me)}<div class=row><button class=s onclick="prof()" style="flex:1">Cancelar</button><button onclick="saveEdit()" style="flex:1">Guardar</button></div></div>`}
 async function saveEdit(){const g=x=>$("#"+x).value.trim();if(!g("n")||!g("c")||g("a")<18)return alert("Completa nombre, ciudad y edad (18+).");
- const r=await sb.from("profiles").update({name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3")}).eq("id",me.id).select().single();if(r.error)return err(r.error);me=r.data;prof()}
+ const ex=readExtra();if(!ex)return;
+ const r=await sb.from("profiles").update({name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),...ex}).eq("id",me.id).select().single();if(r.error)return err(r.error);me=r.data;prof()}
 const photosOf=p=>p.photos?.length?p.photos:[p.photo_url];
 const car=p=>{const ph=photosOf(p);return `<div style="position:relative"><img class=ph src="${esc(ph[0])}" alt="" data-ph="${esc(ph.join("|"))}" data-i=0 onclick="nextPh(this)">${ph.length>1?`<span style="position:absolute;top:8px;right:8px;background:#0008;color:#fff;border-radius:10px;padding:2px 8px;font-size:12px">1/${ph.length}</span>`:""}</div>`};
 function nextPh(img){const a=img.dataset.ph.split("|");if(a.length<2)return;const i=(+img.dataset.i+1)%a.length;img.src=a[i];img.dataset.i=i;img.nextSibling.textContent=(i+1)+"/"+a.length}
@@ -150,7 +179,7 @@ async function delPhoto(i){const ph=photosOf(me);if(ph.length<2)return alert("De
  const k=ph[i].split("/photos/")[1];if(k)sb.storage.from("photos").remove([decodeURIComponent(k)]);await setPhotos(ph.filter((_,j)=>j!=i))}
 function mainPhoto(i){const ph=photosOf(me);setPhotos([ph[i],...ph.filter((_,j)=>j!=i)])}
 const photoMgr=()=>{const ph=photosOf(me);return `<div class="card pad"><b>Mis fotos (${ph.length}/5)</b><div class=row style="flex-wrap:wrap;margin:10px 0">${ph.map((u,i)=>`<div style="text-align:center"><img style="width:72px;height:72px;border-radius:12px;object-fit:cover" src="${esc(u)}" alt=""><br><small>${i?`<a href="#" onclick="mainPhoto(${i});return false">⭐</a> `:"★ "}<a href="#" onclick="delPhoto(${i});return false">✖</a></small></div>`).join("")}</div>${ph.length<5?`<input type=file accept="image/*" onchange="addPhoto(this)">`:""}<p class=mu>★ es tu foto principal. Toca ⭐ para usar otra como principal y ✖ para quitarla.</p></div>`};
-function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+photoMgr()+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="editProf()">✏️ Editar datos</button> <button class=s onclick="sb.auth.signOut()">Cerrar sesión</button><p class=mu style="margin-top:18px"><a href="terminos.html" target=_blank>Términos</a> · <a href="privacidad.html" target=_blank>Privacidad</a> · <a href="#" onclick="delAccount();return false">🗑️ Borrar mi cuenta</a></p>`}
+function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+photoMgr()+extrasMgr()+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="editProf()">✏️ Editar datos</button> <button class=s onclick="sb.auth.signOut()">Cerrar sesión</button><p class=mu style="margin-top:18px"><a href="terminos.html" target=_blank>Términos</a> · <a href="privacidad.html" target=_blank>Privacidad</a> · <a href="#" onclick="delAccount();return false">🗑️ Borrar mi cuenta</a></p>`;if(!me.verified)sb.from("verifications").select("status").maybeSingle().then(r=>{const e=$("#vs");if(e&&r.data)e.textContent="⏳ Verificación en revisión · "})}
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 init();
 </script></body></html>
