@@ -22,8 +22,8 @@ nav button{flex:1;background:none;color:var(--mu);border-radius:0;padding:12px 2
 </style></head><body><main id="app">Cargando…</main><nav id="nav"></nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
-const SUPABASE_URL="PEGA_AQUI_TU_PROJECT_URL", SUPABASE_KEY="PEGA_AQUI_TU_ANON_KEY";
-const WORKER_URL="PEGA_AQUI_LA_URL_DE_TU_WORKER_DE_CLOUDFLARE"; // ej: https://fotos.tuusuario.workers.dev
+const SUPABASE_URL="https://cpchowlsmjhilwbgsorx.supabase.co/rest/v1/", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwY2hvd2xzbWpoaWx3Ymdzb3J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0MDY1NDIsImV4cCI6MjEwNjk4MjU0Mn0.yoQufF717nFWV7CQutsTvFPiiD27qRcxIwpYFhdqqrA";
+const WORKER_URL=""; // déjalo vacío: las fotos van a Supabase (gratis, sin tarjeta). Solo si algún día usas Cloudflare R2: https://fotos.tuusuario.workers.dev
 const SUPPORT_URL=""; // opcional: enlace de Ko-fi / Buy Me a Coffee para apoyo voluntario
 const MAX=5, PLANES=["☕ Café","🌳 Parque","🎶 Evento local","🍽️ Cena"];
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -57,10 +57,12 @@ function shrink(file){return new Promise((ok,no)=>{const im=new Image();im.onloa
 async function saveProf(uid){const g=x=>$("#"+x).value.trim(),f=$("#f").files[0];
  if(!g("n")||!g("c")||g("a")<18)return alert("Completa nombre, ciudad y edad (18+).");
  if(!f)return alert("Sube una foto.");$("#sv").disabled=true;
- try{const b=await shrink(f),{data:{session}}=await sb.auth.getSession();
-  const u=await fetch(WORKER_URL+"/upload",{method:"POST",headers:{Authorization:"Bearer "+session.access_token,"Content-Type":"image/jpeg"},body:b});
-  if(!u.ok)throw new Error("No se pudo subir la foto: "+await u.text());
-  const photo_url=(await u.json()).url;
+ try{const b=await shrink(f);let photo_url;
+  if(WORKER_URL.startsWith("http")){const {data:{session}}=await sb.auth.getSession();
+   const u=await fetch(WORKER_URL+"/upload",{method:"POST",headers:{Authorization:"Bearer "+session.access_token,"Content-Type":"image/jpeg"},body:b});
+   if(!u.ok)throw new Error("No se pudo subir la foto: "+await u.text());photo_url=(await u.json()).url}
+  else{const path=`${uid}/${Date.now()}.jpg`,u=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg"});
+   if(u.error)throw u.error;photo_url=sb.storage.from("photos").getPublicUrl(path).data.publicUrl}
   const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:g("c").toLowerCase(),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url});
   if(r.error)throw r.error;init()}catch(e){err(e);$("#sv").disabled=false}}
 
