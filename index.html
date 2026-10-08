@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#d6283c"><link rel="icon" href="logo.jpg"><link rel="apple-touch-icon" href="logo.jpg"><title>San Valentín</title>
+<meta name="theme-color" content="#d6283c"><link rel="manifest" href="manifest.json"><link rel="icon" href="logo.jpg"><link rel="apple-touch-icon" href="logo.jpg"><title>San Valentín</title>
 <style>
 :root{--bg:#fff5f3;--card:#fff;--tx:#2a1c1e;--mu:#8c7a7c;--ac:#d6283c;--bd:#f1d9d8}
 @media(prefers-color-scheme:dark){:root{--bg:#1b1315;--card:#291d20;--tx:#f6e9e8;--mu:#a99598;--bd:#3e2b30}}
@@ -50,8 +50,8 @@ sb.auth.onAuthStateChange((ev)=>{if(ev=="SIGNED_OUT"){if(gsub){sb.removeChannel(
 
 function authView(){$("#nav").innerHTML="";A().innerHTML=`<div style="text-align:center"><img src="logo.jpg" alt="San Valentín" style="width:140px;border-radius:24px"><h1>San Valentín</h1></div><p class=mu>Citas 100% gratis. Sin pagar por ver likes ni por chatear.</p><div class="card pad">
 <label>Correo</label><input id=em type=email><label>Contraseña (mín. 6)</label><input id=pw type=password>
-<div class=row><button onclick="auth(0)" style="flex:1">Entrar</button><button class=s onclick="auth(1)" style="flex:1">Crear cuenta</button></div></div>`}
-async function auth(reg){const email=$("#em").value.trim(),password=$("#pw").value;
+<label style="font-size:13px;display:block;margin-bottom:10px"><input type=checkbox id=ok style="width:auto;margin:0 6px 0 0">Tengo 18 años o más y acepto los <a href="terminos.html" target=_blank>Términos</a> y la <a href="privacidad.html" target=_blank>Privacidad</a></label><div class=row><button onclick="auth(0)" style="flex:1">Entrar</button><button class=s onclick="auth(1)" style="flex:1">Crear cuenta</button></div></div>`}
+async function auth(reg){if(reg&&!$("#ok").checked)return alert("Para crear tu cuenta debes tener 18 años o más y aceptar los términos.");const email=$("#em").value.trim(),password=$("#pw").value;
  const r=reg?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
  if(r.error)return err(r.error);
  if(reg&&!r.data.session)return alert("Revisa tu correo para confirmar la cuenta y luego entra.");init()}
@@ -82,7 +82,7 @@ const myIds=async()=>{const {data}=await sb.from("swipes").select("to_id").eq("f
 async function disc(){A().innerHTML="<h1>Descubrir</h1>Cargando…";const ids=await myIds();ids.push(me.id);
  const {data,error}=await sb.from("profiles").select("*").eq("city",me.city).not("id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(1);
  if(error)return err(error);const p=data[0];
- A().innerHTML="<h1>Descubrir</h1>"+(p?card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Me interesa 💘</button></div><p class=mu style="text-align:center"><a href="#" onclick="report('${p.id}');return false">Reportar</a></p>`):`<div class="card pad">Ya viste a todos en tu ciudad por ahora. Vuelve pronto 🌙</div>`)}
+ A().innerHTML="<h1>Descubrir</h1>"+(p?card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Me interesa 💘</button></div><p class=mu style="text-align:center"><a href="#" onclick="report('${p.id}');return false">Reportar</a> · <a href="#" onclick="blockUser('${p.id}');return false">Bloquear</a></p>`):`<div class="card pad">Ya viste a todos en tu ciudad por ahora. Vuelve pronto 🌙</div>`)}
 async function swipe(id,liked){const r=await sb.from("swipes").insert({from_id:me.id,to_id:id,liked});if(r.error)return err(r.error);
  if(liked){const {data}=await sb.from("matches").select("id").or(`and(a.eq.${me.id},b.eq.${id}),and(a.eq.${id},b.eq.${me.id})`);if(data?.length)alert("¡Es un match! 🎉 Escríbele en Chats.")}
  tab=="l"?likes():disc()}
@@ -103,7 +103,7 @@ async function chats(){A().innerHTML="<h1>Chats</h1>Cargando…";
 async function openChat(mid,pid){ch={mid,pid};nav();const {data:p}=await sb.from("profiles").select("name").eq("id",pid).single();
  A().innerHTML=`<button class=s onclick="go('c')">← Volver</button><h1>${esc(p?.name)}</h1><div class=msgs id=ms></div><div class=bar><input id=t placeholder="Escribe un mensaje…" maxlength=1000><button onclick="send()">Enviar</button></div>
  <p style="margin-top:14px"><button onclick="planPicker()">📍 Proponer un plan</button></p>
- <p style="margin-top:16px"><button class=s onclick="closeChat()">Cerrar este chat</button> <button class=s onclick="report('${pid}')">Reportar</button></p>`;
+ <p style="margin-top:16px"><button class=s onclick="closeChat()">Cerrar este chat</button> <button class=s onclick="report('${pid}')">Reportar</button> <button class=s onclick="blockUser('${pid}')">Bloquear</button></p>`;
  const {data:msgs}=await sb.from("messages").select("*").eq("match_id",mid).order("created_at");(msgs||[]).forEach(add);if(msgs?.length)setLR(mid,msgs[msgs.length-1].id);delete unread[mid];nav();
  sub=sb.channel("m"+mid).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`match_id=eq.${mid}`},e=>{if(e.new.sender_id!=me.id){add(e.new);setLR(mid,e.new.id)}}).subscribe()}
 function add(m){const e=$("#ms");if(!e)return;const d=document.createElement("div");d.className="m "+(m.sender_id==me.id?"me ":"")+(m.kind=="plan"?"pl":"");d.textContent=(m.kind=="plan"?"📍 Plan propuesto: ":"")+m.body;e.append(d);e.scrollTop=e.scrollHeight}
@@ -130,6 +130,11 @@ async function places(){A().innerHTML="<h1>Planes en tu ciudad</h1>Cargando…";
  +(ad?`<div class="card pad"><span class=tag>Patrocinado</span><br><b>${esc(ad.title)}</b><p>${esc(ad.body)}</p>${/^https?:/.test(ad.link||"")?`<a href="${esc(ad.link)}" target=_blank rel=noopener>Ver más</a>`:""}</div>`:"")
  +"<h2 style='font-size:18px'>Eventos</h2>"+(e.data?.length?e.data.map(x=>`<div class="card pad"><b>${esc(x.title)}</b>${x.sponsor?` <span class=tag>Con ${esc(x.sponsor)}</span>`:""}<p class=mu>${new Date(x.starts_at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})}</p><p>${esc(x.description)}</p></div>`).join(""):none("Aún no hay eventos."))
  +"<h2 style='font-size:18px'>Lugares</h2>"+(v.data?.length?v.data.map(x=>`<div class="card pad"><b>${esc(x.name)}</b> ${x.partner?"<span class=tag>⭐ Aliado</span>":""}<br><span class=mu>${esc(x.category)} · ${esc(x.address)}</span>${x.offer?`<p>🎁 ${esc(x.offer)}</p>`:""}</div>`).join(""):none("Aún no hay lugares."))}
+async function blockUser(id){if(!confirm("¿Bloquear a esta persona? Ya no podrán verse ni escribirse."))return;
+ const r=await sb.rpc("block_user",{target:id});if(r.error)return err(r.error);alert("Persona bloqueada.");go(ch?"c":tab)}
+async function delAccount(){if(prompt("Esto borra para siempre tu cuenta, fotos, matches y mensajes. Escribe BORRAR para confirmar:")!=="BORRAR")return;
+ try{const {data:f}=await sb.storage.from("photos").list(me.id);if(f?.length)await sb.storage.from("photos").remove(f.map(x=>me.id+"/"+x.name));
+  const r=await sb.rpc("delete_my_account");if(r.error)throw r.error;await sb.auth.signOut();alert("Tu cuenta fue eliminada.")}catch(e){err(e)}}
 const normCity=s=>s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 function editProf(){A().innerHTML=`<h1>Editar perfil</h1><div class="card pad"><label>Nombre</label><input id=n value="${esc(me.name)}"><label>Edad (18+)</label><input id=a type=number min=18 max=99 value="${me.age}"><label>Ciudad (solo el nombre, ej: quito)</label><input id=c value="${esc(me.city)}"><label>Qué buscas</label><select id=i>${["Algo serio","Conocer gente","Casual"].map(x=>`<option${x==me.intent?" selected":""}>${x}</option>`).join("")}</select><label>Mi plan ideal</label><input id=q1 maxlength=80 value="${esc(me.q1)}"><label>Algo que me hace reír</label><input id=q2 maxlength=80 value="${esc(me.q2)}"><label>Busco a alguien que…</label><input id=q3 maxlength=80 value="${esc(me.q3)}"><div class=row><button class=s onclick="prof()" style="flex:1">Cancelar</button><button onclick="saveEdit()" style="flex:1">Guardar</button></div></div>`}
 async function saveEdit(){const g=x=>$("#"+x).value.trim();if(!g("n")||!g("c")||g("a")<18)return alert("Completa nombre, ciudad y edad (18+).");
@@ -145,6 +150,7 @@ async function delPhoto(i){const ph=photosOf(me);if(ph.length<2)return alert("De
  const k=ph[i].split("/photos/")[1];if(k)sb.storage.from("photos").remove([decodeURIComponent(k)]);await setPhotos(ph.filter((_,j)=>j!=i))}
 function mainPhoto(i){const ph=photosOf(me);setPhotos([ph[i],...ph.filter((_,j)=>j!=i)])}
 const photoMgr=()=>{const ph=photosOf(me);return `<div class="card pad"><b>Mis fotos (${ph.length}/5)</b><div class=row style="flex-wrap:wrap;margin:10px 0">${ph.map((u,i)=>`<div style="text-align:center"><img style="width:72px;height:72px;border-radius:12px;object-fit:cover" src="${esc(u)}" alt=""><br><small>${i?`<a href="#" onclick="mainPhoto(${i});return false">⭐</a> `:"★ "}<a href="#" onclick="delPhoto(${i});return false">✖</a></small></div>`).join("")}</div>${ph.length<5?`<input type=file accept="image/*" onchange="addPhoto(this)">`:""}<p class=mu>★ es tu foto principal. Toca ⭐ para usar otra como principal y ✖ para quitarla.</p></div>`};
-function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+photoMgr()+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="editProf()">✏️ Editar datos</button> <button class=s onclick="sb.auth.signOut()">Cerrar sesión</button>`}
+function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+photoMgr()+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="editProf()">✏️ Editar datos</button> <button class=s onclick="sb.auth.signOut()">Cerrar sesión</button><p class=mu style="margin-top:18px"><a href="terminos.html" target=_blank>Términos</a> · <a href="privacidad.html" target=_blank>Privacidad</a> · <a href="#" onclick="delAccount();return false">🗑️ Borrar mi cuenta</a></p>`}
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 init();
 </script></body></html>
