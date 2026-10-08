@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d6283c"><title>San Valentín</title>
+<style>
+:root{--bg:#fff5f3;--card:#fff;--tx:#2a1c1e;--mu:#8c7a7c;--ac:#d6283c;--bd:#f1d9d8}
+@media(prefers-color-scheme:dark){:root{--bg:#1b1315;--card:#291d20;--tx:#f6e9e8;--mu:#a99598;--bd:#3e2b30}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;max-width:480px;margin:auto;min-height:100vh;padding-top:env(safe-area-inset-top,0)}
+main{padding:16px 16px 90px}h1{font-size:22px;margin:4px 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;overflow:hidden;margin-bottom:12px}.pad{padding:14px}
+.ph{width:100%;aspect-ratio:4/5;object-fit:cover;background:var(--bd);display:block}
+.row{display:flex;gap:10px;align-items:center}.mu{color:var(--mu);font-size:14px}
+.tag{display:inline-block;border:1px solid var(--bd);border-radius:20px;padding:2px 10px;font-size:13px;margin-right:4px}
+button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--ac);color:#fff;cursor:pointer}
+button.s{background:var(--card);color:var(--tx);border:1px solid var(--bd)}button:disabled{opacity:.5}
+input,select{font:inherit;width:100%;padding:11px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin:4px 0 10px}
+nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:auto;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0)}
+nav button{flex:1;background:none;color:var(--mu);border-radius:0;padding:12px 2px;font-size:13px}nav button.on{color:var(--ac);font-weight:600}
+.msgs{display:flex;flex-direction:column;gap:6px;margin:10px 0;max-height:48vh;overflow-y:auto}
+.m{padding:8px 12px;border-radius:14px;max-width:80%;background:var(--card);border:1px solid var(--bd);overflow-wrap:anywhere}.m.me{align-self:flex-end;background:var(--ac);color:#fff;border:0}.m.pl{border:2px dashed var(--ac);background:var(--card);color:var(--tx)}
+.bar{display:flex;gap:8px}.bar input{margin:0}.av{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--bd);flex:none}
+</style></head><body><main id="app">Cargando…</main><nav id="nav"></nav>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL="PEGA_AQUI_TU_PROJECT_URL", SUPABASE_KEY="PEGA_AQUI_TU_ANON_KEY";
+const WORKER_URL="PEGA_AQUI_LA_URL_DE_TU_WORKER_DE_CLOUDFLARE"; // ej: https://fotos.tuusuario.workers.dev
+const SUPPORT_URL=""; // opcional: enlace de Ko-fi / Buy Me a Coffee para apoyo voluntario
+const MAX=5, PLANES=["☕ Café","🌳 Parque","🎶 Evento local","🍽️ Cena"];
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=s=>document.querySelector(s),A=()=>$("#app");
+const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let me=null,tab="d",ch=null,sub=null;
+const err=e=>alert(e?.message||e);
+
+async function init(){
+ const {data:{session}}=await sb.auth.getSession();
+ if(!session)return authView();
+ const {data}=await sb.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
+ if(!data)return setupView(session.user.id);
+ me=data;go("d")}
+sb.auth.onAuthStateChange((ev)=>{if(ev=="SIGNED_OUT")init()});
+
+function authView(){$("#nav").innerHTML="";A().innerHTML=`<h1>San Valentín 💘</h1><p class=mu>Citas 100% gratis. Sin pagar por ver likes ni por chatear.</p><div class="card pad">
+<label>Correo</label><input id=em type=email><label>Contraseña (mín. 6)</label><input id=pw type=password>
+<div class=row><button onclick="auth(0)" style="flex:1">Entrar</button><button class=s onclick="auth(1)" style="flex:1">Crear cuenta</button></div></div>`}
+async function auth(reg){const email=$("#em").value.trim(),password=$("#pw").value;
+ const r=reg?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
+ if(r.error)return err(r.error);
+ if(reg&&!r.data.session)return alert("Revisa tu correo para confirmar la cuenta y luego entra.");init()}
+
+function setupView(uid){A().innerHTML=`<h1>Crea tu perfil</h1><div class="card pad">
+<label>Nombre</label><input id=n><label>Edad (18+)</label><input id=a type=number min=18 max=99>
+<label>Ciudad</label><input id=c><label>Qué buscas</label><select id=i><option>Algo serio</option><option>Conocer gente</option><option>Casual</option></select>
+<label>Mi plan ideal</label><input id=q1 maxlength=80><label>Algo que me hace reír</label><input id=q2 maxlength=80><label>Busco a alguien que…</label><input id=q3 maxlength=80>
+<label>Foto</label><input id=f type=file accept="image/*"><button id=sv onclick="saveProf('${uid}')" style="width:100%">Guardar</button></div>`}
+function shrink(file){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,600/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no("Foto inválida"),"image/jpeg",.6)};im.onerror=()=>no("Foto inválida");im.src=URL.createObjectURL(file)})}
+async function saveProf(uid){const g=x=>$("#"+x).value.trim(),f=$("#f").files[0];
+ if(!g("n")||!g("c")||g("a")<18)return alert("Completa nombre, ciudad y edad (18+).");
+ if(!f)return alert("Sube una foto.");$("#sv").disabled=true;
+ try{const b=await shrink(f),{data:{session}}=await sb.auth.getSession();
+  const u=await fetch(WORKER_URL+"/upload",{method:"POST",headers:{Authorization:"Bearer "+session.access_token,"Content-Type":"image/jpeg"},body:b});
+  if(!u.ok)throw new Error("No se pudo subir la foto: "+await u.text());
+  const photo_url=(await u.json()).url;
+  const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:g("c").toLowerCase(),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url});
+  if(r.error)throw r.error;init()}catch(e){err(e);$("#sv").disabled=false}}
+
+function nav(){$("#nav").innerHTML=[["d","🔥 Descubrir"],["l","💌 Likes"],["c","💬 Chats"],["v","📍 Planes"],["p","👤 Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
+function go(t){tab=t;ch=null;if(sub){sb.removeChannel(sub);sub=null}nav();({d:disc,l:likes,c:chats,v:places,p:prof})[t]()}
+const card=(p,x="")=>`<div class=card><img class=ph src="${esc(p.photo_url)}" alt=""><div class=pad><b style="font-size:19px">${esc(p.name)}, ${p.age}</b> ${p.verified?"✅":""}<br><span class=tag>${esc(p.intent)}</span><span class=mu>${esc(p.city)}</span>${[p.q1,p.q2,p.q3].filter(Boolean).map(q=>`<p style="margin:8px 0 0">${esc(q)}</p>`).join("")}${x}</div></div>`;
+const myIds=async()=>{const {data}=await sb.from("swipes").select("to_id").eq("from_id",me.id);return (data||[]).map(r=>r.to_id)};
+
+async function disc(){A().innerHTML="<h1>Descubrir</h1>Cargando…";const ids=await myIds();ids.push(me.id);
+ const {data,error}=await sb.from("profiles").select("*").eq("city",me.city).not("id","in",`(${ids.join(",")})`).order("created_at",{ascending:false}).limit(1);
+ if(error)return err(error);const p=data[0];
+ A().innerHTML="<h1>Descubrir</h1>"+(p?card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Me interesa 💘</button></div><p class=mu style="text-align:center"><a href="#" onclick="report('${p.id}');return false">Reportar</a></p>`):`<div class="card pad">Ya viste a todos en tu ciudad por ahora. Vuelve pronto 🌙</div>`)}
+async function swipe(id,liked){const r=await sb.from("swipes").insert({from_id:me.id,to_id:id,liked});if(r.error)return err(r.error);
+ if(liked){const {data}=await sb.from("matches").select("id").or(`and(a.eq.${me.id},b.eq.${id}),and(a.eq.${id},b.eq.${me.id})`);if(data?.length)alert("¡Es un match! 🎉 Escríbele en Chats.")}
+ tab=="l"?likes():disc()}
+async function report(id){const reason=prompt("¿Qué pasó? (ej: perfil falso, acoso, spam)");if(!reason)return;
+ const r=await sb.from("reports").insert({reporter:me.id,reported:id,reason});r.error?err(r.error):alert("Gracias, lo revisaremos.")}
+
+async function likes(){A().innerHTML="<h1>Les gustas</h1>Cargando…";
+ const {data:l}=await sb.from("swipes").select("from_id").eq("to_id",me.id).eq("liked",true);const mine=await myIds();
+ const ids=(l||[]).map(r=>r.from_id).filter(x=>!mine.includes(x));
+ let ps=[];if(ids.length){const r=await sb.from("profiles").select("*").in("id",ids);ps=r.data||[]}
+ A().innerHTML="<h1>Les gustas</h1><p class=mu>Gratis y sin desenfoque.</p>"+(ps.length?ps.map(p=>card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Devolver 💘</button></div>`)).join(""):`<div class="card pad">Aún no hay likes nuevos.</div>`)}
+
+async function chats(){A().innerHTML="<h1>Chats</h1>Cargando…";
+ const {data:ms}=await sb.from("matches").select("*").eq("status","active").order("created_at",{ascending:false});
+ const oth=(ms||[]).map(m=>m.a==me.id?m.b:m.a);let ps={};
+ if(oth.length){const r=await sb.from("profiles").select("id,name,photo_url").in("id",oth);(r.data||[]).forEach(p=>ps[p.id]=p)}
+ A().innerHTML=`<h1>Chats <span class=mu>${(ms||[]).length}/${MAX}</span></h1>`+((ms||[]).length?ms.map(m=>{const p=ps[m.a==me.id?m.b:m.a]||{};return `<div class="card pad row" onclick="openChat(${m.id},'${p.id}')"><img class=av src="${esc(p.photo_url)}" alt=""><b>${esc(p.name)}</b></div>`}).join(""):`<div class="card pad">Aún no tienes matches.</div>`)+`<p class=mu>Máximo ${MAX} chats a la vez para que cada conversación importe.</p>`}
+async function openChat(mid,pid){ch={mid,pid};nav();const {data:p}=await sb.from("profiles").select("name").eq("id",pid).single();
+ A().innerHTML=`<button class=s onclick="go('c')">← Volver</button><h1>${esc(p?.name)}</h1><div class=msgs id=ms></div><div class=bar><input id=t placeholder="Escribe un mensaje…" maxlength=1000><button onclick="send()">Enviar</button></div>
+ <p style="margin-top:14px"><button onclick="planPicker()">📍 Proponer un plan</button></p>
+ <p style="margin-top:16px"><button class=s onclick="closeChat()">Cerrar este chat</button> <button class=s onclick="report('${pid}')">Reportar</button></p>`;
+ const {data:msgs}=await sb.from("messages").select("*").eq("match_id",mid).order("created_at");(msgs||[]).forEach(add);
+ sub=sb.channel("m"+mid).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`match_id=eq.${mid}`},e=>{if(e.new.sender_id!=me.id)add(e.new)}).subscribe()}
+function add(m){const e=$("#ms");if(!e)return;const d=document.createElement("div");d.className="m "+(m.sender_id==me.id?"me ":"")+(m.kind=="plan"?"pl":"");d.textContent=(m.kind=="plan"?"📍 Plan propuesto: ":"")+m.body;e.append(d);e.scrollTop=e.scrollHeight}
+async function send(body,kind="text"){const i=$("#t");body=body||i.value.trim();if(!body)return;
+ const r=await sb.from("messages").insert({match_id:ch.mid,sender_id:me.id,body,kind}).select().single();if(r.error)return err(r.error);add(r.data);if(i)i.value=""}
+async function closeChat(){if(!confirm("¿Cerrar este chat? Liberas un lugar."))return;await sb.from("matches").update({status:"closed"}).eq("id",ch.mid);go("c")}
+
+async function planPicker(){if($("#pk"))return;
+ const {data:v}=await sb.from("venues").select("*").eq("city",me.city).eq("active",true).order("partner",{ascending:false}).limit(15);
+ const o=document.createElement("div");o.className="card pad";o.id="pk";
+ o.innerHTML="<b>Elige un plan</b>"+(v||[]).map(x=>`<p><button class=s style="width:100%;text-align:left" onclick="sendPlan(${x.id})">${esc(x.name)}${x.partner?" ⭐":""}<br><small>${esc(x.offer||x.category||"")}</small></button></p>`).join("")+`<p class=mu>O algo simple:</p>`+PLANES.map(x=>`<button class=s style="margin:3px" onclick="sendPlan(0,'${x}')">${x}</button>`).join("");
+ $("#ms").after(o)}
+async function sendPlan(vid,txt){$("#pk")?.remove();let body=txt;
+ if(vid){const {data:v}=await sb.from("venues").select("name,offer").eq("id",vid).single();body=v.name+(v.offer?" — "+v.offer:"")}
+ const r=await sb.from("messages").insert({match_id:ch.mid,sender_id:me.id,body,kind:"plan",venue_id:vid||null}).select().single();
+ if(r.error)return err(r.error);add(r.data)}
+async function places(){A().innerHTML="<h1>Planes en tu ciudad</h1>Cargando…";
+ const [e,v,a]=await Promise.all([
+  sb.from("events").select("*").eq("city",me.city).eq("active",true).gte("starts_at",new Date().toISOString()).order("starts_at").limit(10),
+  sb.from("venues").select("*").eq("city",me.city).eq("active",true).order("partner",{ascending:false}).limit(20),
+  sb.from("ads").select("*").eq("city",me.city).eq("active",true).limit(1)]);
+ const ad=a.data?.[0],none=t=>`<div class="card pad mu">${t}</div>`;
+ A().innerHTML="<h1>Planes en tu ciudad</h1><p class=mu>Ideas para salir. Conectar con gente siempre es gratis.</p>"
+ +(ad?`<div class="card pad"><span class=tag>Patrocinado</span><br><b>${esc(ad.title)}</b><p>${esc(ad.body)}</p>${/^https?:/.test(ad.link||"")?`<a href="${esc(ad.link)}" target=_blank rel=noopener>Ver más</a>`:""}</div>`:"")
+ +"<h2 style='font-size:18px'>Eventos</h2>"+(e.data?.length?e.data.map(x=>`<div class="card pad"><b>${esc(x.title)}</b>${x.sponsor?` <span class=tag>Con ${esc(x.sponsor)}</span>`:""}<p class=mu>${new Date(x.starts_at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})}</p><p>${esc(x.description)}</p></div>`).join(""):none("Aún no hay eventos."))
+ +"<h2 style='font-size:18px'>Lugares</h2>"+(v.data?.length?v.data.map(x=>`<div class="card pad"><b>${esc(x.name)}</b> ${x.partner?"<span class=tag>⭐ Aliado</span>":""}<br><span class=mu>${esc(x.category)} · ${esc(x.address)}</span>${x.offer?`<p>🎁 ${esc(x.offer)}</p>`:""}</div>`).join(""):none("Aún no hay lugares."))}
+function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="sb.auth.signOut()">Cerrar sesión</button>`}
+init();
+</script></body></html>
