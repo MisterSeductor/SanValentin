@@ -26,7 +26,7 @@ const SUPABASE_URL="https://cpchowlsmjhilwbgsorx.supabase.co", SUPABASE_KEY="eyJ
 const WORKER_URL=""; // déjalo vacío: las fotos van a Supabase (gratis, sin tarjeta). Solo si algún día usas Cloudflare R2: https://fotos.tuusuario.workers.dev
 const SUPPORT_URL=""; // opcional: enlace de Ko-fi / Buy Me a Coffee para apoyo voluntario
 const MAX=5, PLANES=["☕ Café","🌳 Parque","🎶 Evento local","🍽️ Cena"];
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const clean=s=>s.replace(/[^\x21-\x7e]/g,"");const sb=supabase.createClient(clean(SUPABASE_URL).replace(/\/+$/,""),clean(SUPABASE_KEY));
 const $=s=>document.querySelector(s),A=()=>$("#app");
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let me=null,tab="d",ch=null,sub=null;
