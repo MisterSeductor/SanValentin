@@ -61,7 +61,7 @@ async function saveProf(uid){const g=x=>$("#"+x).value.trim(),f=$("#f").files[0]
    if(!u.ok)throw new Error("No se pudo subir la foto: "+await u.text());photo_url=(await u.json()).url}
   else{const path=`${uid}/${Date.now()}.jpg`,u=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg"});
    if(u.error)throw u.error;photo_url=sb.storage.from("photos").getPublicUrl(path).data.publicUrl}
-  const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:g("c").toLowerCase(),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url});
+  const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url});
   if(r.error)throw r.error;init()}catch(e){err(e);$("#sv").disabled=false}}
 
 function nav(){$("#nav").innerHTML=[["d","🔥 Descubrir"],["l","💌 Likes"],["c","💬 Chats"],["v","📍 Planes"],["p","👤 Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
@@ -120,6 +120,10 @@ async function places(){A().innerHTML="<h1>Planes en tu ciudad</h1>Cargando…";
  +(ad?`<div class="card pad"><span class=tag>Patrocinado</span><br><b>${esc(ad.title)}</b><p>${esc(ad.body)}</p>${/^https?:/.test(ad.link||"")?`<a href="${esc(ad.link)}" target=_blank rel=noopener>Ver más</a>`:""}</div>`:"")
  +"<h2 style='font-size:18px'>Eventos</h2>"+(e.data?.length?e.data.map(x=>`<div class="card pad"><b>${esc(x.title)}</b>${x.sponsor?` <span class=tag>Con ${esc(x.sponsor)}</span>`:""}<p class=mu>${new Date(x.starts_at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})}</p><p>${esc(x.description)}</p></div>`).join(""):none("Aún no hay eventos."))
  +"<h2 style='font-size:18px'>Lugares</h2>"+(v.data?.length?v.data.map(x=>`<div class="card pad"><b>${esc(x.name)}</b> ${x.partner?"<span class=tag>⭐ Aliado</span>":""}<br><span class=mu>${esc(x.category)} · ${esc(x.address)}</span>${x.offer?`<p>🎁 ${esc(x.offer)}</p>`:""}</div>`).join(""):none("Aún no hay lugares."))}
+const normCity=s=>s.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+function editProf(){A().innerHTML=`<h1>Editar perfil</h1><div class="card pad"><label>Nombre</label><input id=n value="${esc(me.name)}"><label>Edad (18+)</label><input id=a type=number min=18 max=99 value="${me.age}"><label>Ciudad (solo el nombre, ej: quito)</label><input id=c value="${esc(me.city)}"><label>Qué buscas</label><select id=i>${["Algo serio","Conocer gente","Casual"].map(x=>`<option${x==me.intent?" selected":""}>${x}</option>`).join("")}</select><label>Mi plan ideal</label><input id=q1 maxlength=80 value="${esc(me.q1)}"><label>Algo que me hace reír</label><input id=q2 maxlength=80 value="${esc(me.q2)}"><label>Busco a alguien que…</label><input id=q3 maxlength=80 value="${esc(me.q3)}"><div class=row><button class=s onclick="prof()" style="flex:1">Cancelar</button><button onclick="saveEdit()" style="flex:1">Guardar</button></div></div>`}
+async function saveEdit(){const g=x=>$("#"+x).value.trim();if(!g("n")||!g("c")||g("a")<18)return alert("Completa nombre, ciudad y edad (18+).");
+ const r=await sb.from("profiles").update({name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3")}).eq("id",me.id).select().single();if(r.error)return err(r.error);me=r.data;prof()}
 const photosOf=p=>p.photos?.length?p.photos:[p.photo_url];
 const car=p=>{const ph=photosOf(p);return `<div style="position:relative"><img class=ph src="${esc(ph[0])}" alt="" data-ph="${esc(ph.join("|"))}" data-i=0 onclick="nextPh(this)">${ph.length>1?`<span style="position:absolute;top:8px;right:8px;background:#0008;color:#fff;border-radius:10px;padding:2px 8px;font-size:12px">1/${ph.length}</span>`:""}</div>`};
 function nextPh(img){const a=img.dataset.ph.split("|");if(a.length<2)return;const i=(+img.dataset.i+1)%a.length;img.src=a[i];img.dataset.i=i;img.nextSibling.textContent=(i+1)+"/"+a.length}
@@ -131,6 +135,6 @@ async function delPhoto(i){const ph=photosOf(me);if(ph.length<2)return alert("De
  const k=ph[i].split("/photos/")[1];if(k)sb.storage.from("photos").remove([decodeURIComponent(k)]);await setPhotos(ph.filter((_,j)=>j!=i))}
 function mainPhoto(i){const ph=photosOf(me);setPhotos([ph[i],...ph.filter((_,j)=>j!=i)])}
 const photoMgr=()=>{const ph=photosOf(me);return `<div class="card pad"><b>Mis fotos (${ph.length}/5)</b><div class=row style="flex-wrap:wrap;margin:10px 0">${ph.map((u,i)=>`<div style="text-align:center"><img style="width:72px;height:72px;border-radius:12px;object-fit:cover" src="${esc(u)}" alt=""><br><small>${i?`<a href="#" onclick="mainPhoto(${i});return false">⭐</a> `:"★ "}<a href="#" onclick="delPhoto(${i});return false">✖</a></small></div>`).join("")}</div>${ph.length<5?`<input type=file accept="image/*" onchange="addPhoto(this)">`:""}<p class=mu>★ es tu foto principal. Toca ⭐ para usar otra como principal y ✖ para quitarla.</p></div>`};
-function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+photoMgr()+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="sb.auth.signOut()">Cerrar sesión</button>`}
+function prof(){A().innerHTML="<h1>Mi perfil</h1>"+card(me)+photoMgr()+(SUPPORT_URL?`<p><a href="${esc(SUPPORT_URL)}" target=_blank rel=noopener>💝 Apoya San Valentín (voluntario)</a></p>`:"")+`<button class=s onclick="editProf()">✏️ Editar datos</button> <button class=s onclick="sb.auth.signOut()">Cerrar sesión</button>`}
 init();
 </script></body></html>
