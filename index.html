@@ -27,7 +27,17 @@ const MAX=5, PLANES=["☕ Café","🌳 Parque","🎶 Evento local","🍽️ Cena
 const clean=s=>s.replace(/[^\x21-\x7e]/g,"");const sb=supabase.createClient(clean(SUPABASE_URL).replace(/^(https?:\/\/[^\/]+).*$/,"$1"),clean(SUPABASE_KEY));
 const $=s=>document.querySelector(s),A=()=>$("#app");
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let me=null,tab="d",ch=null,sub=null;
+let me=null,tab="d",ch=null,sub=null,gsub=null,unread={};
+const tot=()=>Object.values(unread).reduce((a,b)=>a+b,0);
+const LR=()=>{try{return JSON.parse(localStorage.getItem("lr")||"{}")}catch(e){return{}}};
+const setLR=(mid,id)=>{try{const o=LR();o[mid]=Math.max(o[mid]||0,id);localStorage.setItem("lr",JSON.stringify(o))}catch(e){}};
+async function loadUnread(){const {data:ms}=await sb.from("matches").select("id").eq("status","active"),lr=LR();unread={};
+ for(const m of ms||[]){const {count}=await sb.from("messages").select("id",{count:"exact",head:true}).eq("match_id",m.id).neq("sender_id",me.id).gt("id",lr[m.id]||0);if(count)unread[m.id]=count}
+ nav();if(tab=="c"&&!ch)chats()}
+function listen(){if(gsub)return;gsub=sb.channel("inbox").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},e=>{const m=e.new;if(m.sender_id==me.id)return;
+ if(ch&&ch.mid==m.match_id){setLR(m.match_id,m.id);return}
+ unread[m.match_id]=(unread[m.match_id]||0)+1;nav();if(tab=="c"&&!ch)chats();
+ try{navigator.vibrate?.(200)}catch(e){}document.title="💬 Mensaje nuevo – San Valentín"}).subscribe()}
 const err=e=>alert(e?.message||e);
 
 async function init(){
@@ -35,8 +45,8 @@ async function init(){
  if(!session)return authView();
  const {data}=await sb.from("profiles").select("*").eq("id",session.user.id).maybeSingle();
  if(!data)return setupView(session.user.id);
- me=data;go("d")}
-sb.auth.onAuthStateChange((ev)=>{if(ev=="SIGNED_OUT")init()});
+ me=data;go("d");listen();loadUnread()}
+sb.auth.onAuthStateChange((ev)=>{if(ev=="SIGNED_OUT"){if(gsub){sb.removeChannel(gsub);gsub=null}unread={};init()}});
 
 function authView(){$("#nav").innerHTML="";A().innerHTML=`<div style="text-align:center"><img src="logo.jpg" alt="San Valentín" style="width:140px;border-radius:24px"><h1>San Valentín</h1></div><p class=mu>Citas 100% gratis. Sin pagar por ver likes ni por chatear.</p><div class="card pad">
 <label>Correo</label><input id=em type=email><label>Contraseña (mín. 6)</label><input id=pw type=password>
@@ -64,8 +74,8 @@ async function saveProf(uid){const g=x=>$("#"+x).value.trim(),f=$("#f").files[0]
   const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url});
   if(r.error)throw r.error;init()}catch(e){err(e);$("#sv").disabled=false}}
 
-function nav(){$("#nav").innerHTML=[["d","🔥 Descubrir"],["l","💌 Likes"],["c","💬 Chats"],["v","📍 Planes"],["p","👤 Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
-function go(t){tab=t;ch=null;if(sub){sb.removeChannel(sub);sub=null}nav();({d:disc,l:likes,c:chats,v:places,p:prof})[t]()}
+function nav(){$("#nav").innerHTML=[["d","🔥 Descubrir"],["l","💌 Likes"],["c","💬 Chats"],["v","📍 Planes"],["p","👤 Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')">${l}${k=="c"&&tot()?`<span style="background:#d6283c;color:#fff;border-radius:10px;padding:0 6px;font-size:12px;margin-left:4px">${tot()}</span>`:""}</button>`).join("")}
+function go(t){document.title="San Valentín";tab=t;ch=null;if(sub){sb.removeChannel(sub);sub=null}nav();({d:disc,l:likes,c:chats,v:places,p:prof})[t]()}
 const card=(p,x="")=>`<div class=card>${car(p)}<div class=pad><b style="font-size:19px">${esc(p.name)}, ${p.age}</b> ${p.verified?"✅":""}<br><span class=tag>${esc(p.intent)}</span><span class=mu>${esc(p.city)}</span>${[p.q1,p.q2,p.q3].filter(Boolean).map(q=>`<p style="margin:8px 0 0">${esc(q)}</p>`).join("")}${x}</div></div>`;
 const myIds=async()=>{const {data}=await sb.from("swipes").select("to_id").eq("from_id",me.id);return (data||[]).map(r=>r.to_id)};
 
@@ -89,13 +99,13 @@ async function chats(){A().innerHTML="<h1>Chats</h1>Cargando…";
  const {data:ms}=await sb.from("matches").select("*").eq("status","active").order("created_at",{ascending:false});
  const oth=(ms||[]).map(m=>m.a==me.id?m.b:m.a);let ps={};
  if(oth.length){const r=await sb.from("profiles").select("id,name,photo_url").in("id",oth);(r.data||[]).forEach(p=>ps[p.id]=p)}
- A().innerHTML=`<h1>Chats <span class=mu>${(ms||[]).length}/${MAX}</span></h1>`+((ms||[]).length?ms.map(m=>{const p=ps[m.a==me.id?m.b:m.a]||{};return `<div class="card pad row" onclick="openChat(${m.id},'${p.id}')"><img class=av src="${esc(p.photo_url)}" alt=""><b>${esc(p.name)}</b></div>`}).join(""):`<div class="card pad">Aún no tienes matches.</div>`)+`<p class=mu>Máximo ${MAX} chats a la vez para que cada conversación importe.</p>`}
+ A().innerHTML=`<h1>Chats <span class=mu>${(ms||[]).length}/${MAX}</span></h1>`+((ms||[]).length?ms.map(m=>{const p=ps[m.a==me.id?m.b:m.a]||{};return `<div class="card pad row" onclick="openChat(${m.id},'${p.id}')"><img class=av src="${esc(p.photo_url)}" alt=""><b>${esc(p.name)}</b>${unread[m.id]?` <span style="background:var(--ac);color:#fff;border-radius:10px;padding:0 7px;font-size:12px">${unread[m.id]} nuevo${unread[m.id]>1?"s":""}</span>`:""}</div>`}).join(""):`<div class="card pad">Aún no tienes matches.</div>`)+`<p class=mu>Máximo ${MAX} chats a la vez para que cada conversación importe.</p>`}
 async function openChat(mid,pid){ch={mid,pid};nav();const {data:p}=await sb.from("profiles").select("name").eq("id",pid).single();
  A().innerHTML=`<button class=s onclick="go('c')">← Volver</button><h1>${esc(p?.name)}</h1><div class=msgs id=ms></div><div class=bar><input id=t placeholder="Escribe un mensaje…" maxlength=1000><button onclick="send()">Enviar</button></div>
  <p style="margin-top:14px"><button onclick="planPicker()">📍 Proponer un plan</button></p>
  <p style="margin-top:16px"><button class=s onclick="closeChat()">Cerrar este chat</button> <button class=s onclick="report('${pid}')">Reportar</button></p>`;
- const {data:msgs}=await sb.from("messages").select("*").eq("match_id",mid).order("created_at");(msgs||[]).forEach(add);
- sub=sb.channel("m"+mid).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`match_id=eq.${mid}`},e=>{if(e.new.sender_id!=me.id)add(e.new)}).subscribe()}
+ const {data:msgs}=await sb.from("messages").select("*").eq("match_id",mid).order("created_at");(msgs||[]).forEach(add);if(msgs?.length)setLR(mid,msgs[msgs.length-1].id);delete unread[mid];nav();
+ sub=sb.channel("m"+mid).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`match_id=eq.${mid}`},e=>{if(e.new.sender_id!=me.id){add(e.new);setLR(mid,e.new.id)}}).subscribe()}
 function add(m){const e=$("#ms");if(!e)return;const d=document.createElement("div");d.className="m "+(m.sender_id==me.id?"me ":"")+(m.kind=="plan"?"pl":"");d.textContent=(m.kind=="plan"?"📍 Plan propuesto: ":"")+m.body;e.append(d);e.scrollTop=e.scrollHeight}
 async function send(body,kind="text"){const i=$("#t");body=body||i.value.trim();if(!body)return;
  const r=await sb.from("messages").insert({match_id:ch.mid,sender_id:me.id,body,kind}).select().single();if(r.error)return err(r.error);add(r.data);if(i)i.value=""}
