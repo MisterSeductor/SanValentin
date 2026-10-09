@@ -1,26 +1,58 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#d6283c"><link rel="manifest" href="manifest.json"><link rel="icon" href="logo.jpg"><link rel="apple-touch-icon" href="logo.jpg"><title>San Valentín</title>
+<meta name="theme-color" content="#14080c"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="manifest" href="manifest.json"><link rel="icon" href="logo.jpg"><link rel="apple-touch-icon" href="logo.jpg"><title>San Valentín</title>
 <style>
-:root{--bg:#fff5f3;--card:#fff;--tx:#2a1c1e;--mu:#8c7a7c;--ac:#d6283c;--bd:#f1d9d8}
-@media(prefers-color-scheme:dark){:root{--bg:#1b1315;--card:#291d20;--tx:#f6e9e8;--mu:#a99598;--bd:#3e2b30}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;max-width:480px;margin:auto;min-height:100vh;padding-top:env(safe-area-inset-top,0)}
-main{padding:16px 16px 90px}h1{font-size:22px;margin:4px 0 12px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;overflow:hidden;margin-bottom:12px}.pad{padding:14px}
-.ph{width:100%;aspect-ratio:4/5;object-fit:cover;background:var(--bd);display:block}
-.row{display:flex;gap:10px;align-items:center}.mu{color:var(--mu);font-size:14px}
-.tag{display:inline-block;border:1px solid var(--bd);border-radius:20px;padding:2px 10px;font-size:13px;margin-right:4px}
-button{font:inherit;border:0;border-radius:12px;padding:12px 16px;background:var(--ac);color:#fff;cursor:pointer}
-button.s{background:var(--card);color:var(--tx);border:1px solid var(--bd)}button:disabled{opacity:.5}
-input,select{font:inherit;width:100%;padding:11px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);margin:4px 0 10px}
-nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:auto;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0)}
-nav button{flex:1;background:none;color:var(--mu);border-radius:0;padding:12px 2px;font-size:13px}nav button.on{color:var(--ac);font-weight:600}
-.msgs{display:flex;flex-direction:column;gap:6px;margin:10px 0;max-height:48vh;overflow-y:auto}
-.m{padding:8px 12px;border-radius:14px;max-width:80%;background:var(--card);border:1px solid var(--bd);overflow-wrap:anywhere}.m.me{align-self:flex-end;background:var(--ac);color:#fff;border:0}.m.pl{border:2px dashed var(--ac);background:var(--card);color:var(--tx)}
-.bar{display:flex;gap:8px}.bar input{margin:0}.av{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--bd);flex:none}
-.chk{display:inline-block;margin:3px 4px 3px 0;font-size:14px}.chk input{width:auto;margin:0 4px 0 0}
-</style></head><body><main id="app">Cargando…</main><nav id="nav"></nav>
+:root{--bg:#14080c;--sf:#1f0f15;--sf2:#2b1720;--ln:#3b212b;--tx:#f5ece9;--mu:#aa9097;--cr:#d1304a;--gd:#d9ae8e;--sh:0 18px 40px #0008;--serif:"Cormorant Garamond",Georgia,serif;--sans:"Manrope",system-ui,sans-serif;color-scheme:dark}
+@media(prefers-color-scheme:light){:root{--bg:#f6f2f1;--sf:#fff;--sf2:#efe8e7;--ln:#e3d7d5;--tx:#26121a;--mu:#7b666e;--cr:#b8203a;--gd:#a8723f;--sh:0 14px 30px #3a1a2418;color-scheme:light}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0 auto;background:var(--bg);color:var(--tx);font:15.5px/1.5 var(--sans);max-width:520px;min-height:100vh;-webkit-font-smoothing:antialiased}
+#top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 18px 10px;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(14px)}
+#top img{width:34px;height:34px;border-radius:50%;object-fit:cover}#top span{font:600 25px/1 var(--serif)}
+body.out #top{display:none}body.out main{padding-top:calc(28px + env(safe-area-inset-top,0px))}
+main{padding:6px 16px calc(112px + env(safe-area-inset-bottom,0px))}
+h1{font:600 32px/1.1 var(--serif);margin:10px 2px 14px}h2{font:600 24px/1.15 var(--serif);margin:18px 2px 10px}
+a{color:var(--gd)}.mu{color:var(--mu);font-size:14px}label{font-size:13px;font-weight:500;color:var(--mu)}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:18px;overflow:hidden;margin-bottom:14px}.pad{padding:16px}
+.row{display:flex;gap:12px;align-items:center}
+.pc{background:var(--sf);border:1px solid var(--ln);border-radius:26px;overflow:hidden;margin-bottom:14px;box-shadow:var(--sh)}
+.cw{position:relative}.ph{width:100%;aspect-ratio:4/5;object-fit:cover;display:block;background:var(--sf2)}
+.ov{position:absolute;left:0;right:0;bottom:0;padding:96px 20px 18px;background:linear-gradient(to top,#0b0407e6,#0b040700);color:#fff;pointer-events:none}
+.nm{font:600 40px/1 var(--serif);display:flex;align-items:center;gap:10px}.nm i{font-style:normal;font-weight:500;opacity:.92}
+.loc{margin-top:6px;font-size:14px;opacity:.92}.vb{width:22px;height:22px;color:var(--gd);flex:none}
+.cnt{position:absolute;top:14px;right:14px;background:#0007;backdrop-filter:blur(8px);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px}
+.pcb{padding:18px 20px 6px}.intent{display:inline-block;font-weight:600;font-size:13px;color:var(--gd);border:1px solid var(--gd);border-radius:999px;padding:3px 12px}
+.tags{margin:14px 0 4px}.tag{display:inline-block;background:var(--sf2);border-radius:999px;padding:5px 12px;font-size:13px;margin:0 6px 7px 0}
+blockquote{margin:16px 0;padding:2px 0 2px 16px;border-left:2px solid var(--gd);font:italic 500 22px/1.3 var(--serif)}
+.acts{display:flex;justify-content:center;align-items:center;gap:26px;padding:10px 0 8px}
+.fab{width:66px;height:66px;border-radius:50%;padding:0;display:grid;place-items:center;background:var(--sf2);color:var(--mu);border:1px solid var(--ln);box-shadow:var(--sh)}
+.fab svg{width:28px;height:28px}.fab.like{background:var(--cr);color:#fff;border-color:var(--cr);width:78px;height:78px}
+.safe{text-align:center;font-size:13px;margin:2px 0 16px}.safe a{color:var(--mu);margin:0 10px}
+button{font:600 15px var(--sans);border:0;border-radius:999px;padding:13px 20px;background:var(--cr);color:#fff;cursor:pointer;transition:filter .15s,transform .15s}
+button:hover{filter:brightness(1.08)}button:active{transform:scale(.96)}button.s{background:var(--sf2);color:var(--tx);border:1px solid var(--ln)}button:disabled{opacity:.5}
+:focus-visible{outline:2px solid var(--gd);outline-offset:2px}
+input,select{font:inherit;width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--ln);background:var(--sf2);color:var(--tx);margin:5px 0 12px}
+input[type=file]{padding:10px}details>summary{cursor:pointer;list-style:none}details>summary::-webkit-details-marker{display:none}
+.chk{display:inline-flex;align-items:center;margin:0 6px 8px 0;padding:6px 13px;border:1px solid var(--ln);border-radius:999px;font-size:14px;color:var(--tx);background:var(--sf2);cursor:pointer}
+.chk input{display:none}.chk:has(input:checked){background:var(--cr);border-color:var(--cr);color:#fff}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(496px,calc(100% - 24px));display:flex;padding:6px;background:color-mix(in srgb,var(--sf) 84%,transparent);backdrop-filter:blur(18px);border:1px solid var(--ln);border-radius:28px;box-shadow:var(--sh);z-index:6}
+nav button{flex:1;position:relative;background:none;color:var(--mu);border-radius:22px;padding:9px 2px 7px;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button.on{color:var(--tx);background:var(--sf2)}nav button.on svg{color:var(--cr)}
+nav .bd{position:absolute;top:3px;left:54%;background:var(--cr);color:#fff;border-radius:999px;min-width:18px;height:18px;font-size:11px;display:grid;place-items:center;padding:0 5px}
+.msgs{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:52vh;overflow-y:auto;padding:4px}
+.m{padding:10px 14px;border-radius:20px 20px 20px 6px;max-width:80%;background:var(--sf2);overflow-wrap:anywhere}
+.m.me{align-self:flex-end;background:var(--cr);color:#fff;border-radius:20px 20px 6px 20px}
+.m.pl{border:1.5px dashed var(--gd);background:var(--sf);color:var(--tx);border-radius:14px;font:500 19px/1.3 var(--serif)}
+.bar{display:flex;gap:8px;align-items:center}.bar input{margin:0}.av{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--sf2);flex:none}
+.hero{text-align:center;padding:0 4px 22px}.hero img{width:150px;height:150px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px var(--gd),var(--sh)}
+.hero h1{font-size:48px;margin:18px 0 8px}.hero p{font:italic 500 22px/1.3 var(--serif);color:var(--mu);margin:0 auto;max-width:320px}
+.modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:#0a0306dd;backdrop-filter:blur(10px);animation:fd .3s ease}
+.mbox{width:min(380px,100%);text-align:center;color:#fff}.mbox h2{font-size:48px;margin:20px 0 6px}.mbox p{opacity:.85;margin:0 0 14px}.mbox button{width:100%;margin-top:10px}
+.pair{display:flex;justify-content:center}.pair img{width:128px;height:160px;object-fit:cover;border-radius:22px;border:3px solid #14080c}
+.pair img:first-child{transform:rotate(-6deg);margin-right:-18px}.pair img:last-child{transform:rotate(6deg);animation:pop .5s .15s both}
+@keyframes fd{from{opacity:0}}@keyframes pop{from{transform:rotate(6deg) scale(.6);opacity:0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><header id="top"><img src="logo.jpg" alt=""><span>San Valentín</span></header><main id="app">Cargando…</main><nav id="nav"></nav>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
@@ -49,7 +81,7 @@ async function init(){
  me=data;go("d");listen();loadUnread();try{if(localStorage.getItem("loc"))locOn(1)}catch(e){}}
 sb.auth.onAuthStateChange((ev)=>{if(ev=="SIGNED_OUT"){if(gsub){sb.removeChannel(gsub);gsub=null}unread={};init()}});
 
-function authView(){$("#nav").innerHTML="";A().innerHTML=`<div style="text-align:center"><img src="logo.jpg" alt="San Valentín" style="width:140px;border-radius:24px"><h1>San Valentín</h1></div><p class=mu>Citas 100% gratis. Sin pagar por ver likes ni por chatear.</p><div class="card pad">
+function authView(){document.body.classList.add("out");$("#nav").innerHTML="";A().innerHTML=`<div class=hero><img src="logo.jpg" alt=""><h1>San Valentín</h1><p>Conoce a alguien de tu ciudad. Gratis, sin pagar por ver likes ni por chatear.</p></div><div class="card pad">
 <label>Correo</label><input id=em type=email><label>Contraseña (mín. 6)</label><input id=pw type=password>
 <label style="font-size:13px;display:block;margin-bottom:10px"><input type=checkbox id=ok style="width:auto;margin:0 6px 0 0">Tengo 18 años o más y acepto los <a href="terminos.html" target=_blank>Términos</a> y la <a href="privacidad.html" target=_blank>Privacidad</a></label><div class=row><button onclick="auth(0)" style="flex:1">Entrar</button><button class=s onclick="auth(1)" style="flex:1">Crear cuenta</button></div></div>`}
 async function auth(reg){if(reg&&!$("#ok").checked)return alert("Para crear tu cuenta debes tener 18 años o más y aceptar los términos.");const email=$("#em").value.trim(),password=$("#pw").value;
@@ -57,7 +89,7 @@ async function auth(reg){if(reg&&!$("#ok").checked)return alert("Para crear tu c
  if(r.error)return err(r.error);
  if(reg&&!r.data.session)return alert("Revisa tu correo para confirmar la cuenta y luego entra.");init()}
 
-function setupView(uid){A().innerHTML=`<h1>Crea tu perfil</h1><div class="card pad">
+function setupView(uid){document.body.classList.add("out");A().innerHTML=`<h1>Crea tu perfil</h1><div class="card pad">
 <label>Nombre</label><input id=n><label>Edad (18+)</label><input id=a type=number min=18 max=99>
 <label>Ciudad</label><input id=c><label>Qué buscas</label><select id=i><option>Algo serio</option><option>Conocer gente</option><option>Casual</option></select>
 <label>Mi plan ideal</label><input id=q1 maxlength=80><label>Algo que me hace reír</label><input id=q2 maxlength=80><label>Busco a alguien que…</label><input id=q3 maxlength=80>
@@ -75,17 +107,25 @@ async function saveProf(uid){const g=x=>$("#"+x).value.trim(),f=$("#f").files[0]
   const r=await sb.from("profiles").insert({id:uid,name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),photo_url,...ex});
   if(r.error)throw r.error;init()}catch(e){err(e);$("#sv").disabled=false}}
 
-function nav(){$("#nav").innerHTML=[["d","🔥 Descubrir"],["l","💌 Likes"],["c","💬 Chats"],["v","📍 Planes"],["p","👤 Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')">${l}${k=="c"&&tot()?`<span style="background:#d6283c;color:#fff;border-radius:10px;padding:0 6px;font-size:12px;margin-left:4px">${tot()}</span>`:""}</button>`).join("")}
-function go(t){document.title="San Valentín";tab=t;ch=null;if(sub){sb.removeChannel(sub);sub=null}nav();({d:disc,l:likes,c:chats,v:places,p:prof})[t]()}
-const card=(p,x="")=>`<div class=card>${car(p)}<div class=pad><b style="font-size:19px">${esc(p.name)}, ${p.age}</b> ${p.verified?"✅":""}<br><span class=tag>${esc(p.intent)}</span><span class=mu>${esc(p.city)}${p.km_band?" · "+esc(p.km_band):""}</span><div style="margin-top:8px">${extraTags(p)}</div>${[p.q1,p.q2,p.q3].filter(Boolean).map(q=>`<p style="margin:8px 0 0">${esc(q)}</p>`).join("")}${x}</div></div>`;
+const SV=d=>`<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const HP='<path d="M12 21s-7.5-4.6-9.6-9.4A5.6 5.6 0 0 1 12 6.1a5.6 5.6 0 0 1 9.6 5.5C19.5 16.4 12 21 12 21z"/>';
+const IC={d:SV('<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/>'),l:SV(HP),c:SV('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>'),v:SV('<path d="M12 21s7-5.6 7-11a7 7 0 0 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>'),p:SV('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')};
+function nav(){$("#nav").innerHTML=[["d","Descubrir"],["l","Likes"],["c","Chats"],["v","Planes"],["p","Perfil"]].map(([k,l])=>`<button class="${tab==k&&!ch?"on":""}" onclick="go('${k}')" aria-label="${l}">${IC[k]}<span>${l}</span>${k=="c"&&tot()?`<span class=bd>${tot()}</span>`:""}</button>`).join("")}
+function go(t){document.title="San Valentín";document.body.classList.remove("out");tab=t;ch=null;if(sub){sb.removeChannel(sub);sub=null}nav();({d:disc,l:likes,c:chats,v:places,p:prof})[t]()}
+const VB='<svg class=vb viewBox="0 0 24 24" aria-label="Verificado"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.4l3 3 6-6.4" fill="none" stroke="#2a1209" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const IX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',IH='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.4A5.6 5.6 0 0 1 12 6.1a5.6 5.6 0 0 1 9.6 5.5C19.5 16.4 12 21 12 21z"/></svg>';
+const acts=(id,more)=>`<div class=acts><button class=fab onclick="swipe('${id}',false)" aria-label="Pasar">${IX}</button><button class="fab like" onclick="swipe('${id}',true)" aria-label="Me interesa">${IH}</button></div>${more||""}`;
+const card=(p,x="")=>`<div class=pc>${car(p,`<div class=ov><div class=nm>${esc(p.name)}<i>${p.age}</i>${p.verified?VB:""}</div><div class=loc>${esc(p.city)}${p.km_band?` · ${esc(p.km_band)}`:""}</div></div>`)}<div class=pcb><span class=intent>${esc(p.intent)}</span><div class=tags>${extraTags(p)}</div>${[p.q1,p.q2,p.q3].filter(Boolean).map(q=>`<blockquote>${esc(q)}</blockquote>`).join("")}</div>${x}</div>`;
+async function matchModal(id){const {data:p}=await sb.from("profiles").select("name,photo_url").eq("id",id).maybeSingle();const o=document.createElement("div");o.className="modal";
+ o.innerHTML=`<div class=mbox><div class=pair><img src="${esc(me.photo_url)}" alt=""><img src="${esc(p?.photo_url)}" alt=""></div><h2>Es un match</h2><p>Tú y ${esc(p?.name||"esta persona")} se gustaron. Rompe el hielo con un plan.</p><button onclick="this.closest('.modal').remove();go('c')">Escribir ahora</button><button class=s onclick="this.closest('.modal').remove()">Seguir descubriendo</button></div>`;document.body.append(o)}
 const myIds=async()=>{const {data}=await sb.from("swipes").select("to_id").eq("from_id",me.id);return (data||[]).map(r=>r.to_id)};
 
 async function disc(){A().innerHTML="<h1>Descubrir</h1>Cargando…";
  const {data,error}=await sb.rpc("next_profile",{max_km:F.km?+F.km:null,amin:F.amin,amax:F.amax,want:F.want||null});
  if(error)return err(error);const p=data[0];
- A().innerHTML="<h1>Descubrir</h1>"+filtersUI()+(p?card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Me interesa 💘</button></div><p class=mu style="text-align:center"><a href="#" onclick="report('${p.id}');return false">Reportar</a> · <a href="#" onclick="blockUser('${p.id}');return false">Bloquear</a></p>`):`<div class="card pad">Ya viste a todos en tu ciudad por ahora. Vuelve pronto 🌙</div>`)}
+ A().innerHTML="<h1>Descubrir</h1>"+filtersUI()+(p?card(p,acts(p.id,`<p class=safe><a href="#" onclick="report('${p.id}');return false">Reportar</a><a href="#" onclick="blockUser('${p.id}');return false">Bloquear</a></p>`)):`<div class="card pad">Ya viste a todos por ahora. Amplía la distancia en los filtros o vuelve más tarde.</div>`)}
 async function swipe(id,liked){const r=await sb.from("swipes").insert({from_id:me.id,to_id:id,liked});if(r.error)return err(r.error);
- if(liked){const {data}=await sb.from("matches").select("id").or(`and(a.eq.${me.id},b.eq.${id}),and(a.eq.${id},b.eq.${me.id})`);if(data?.length)alert("¡Es un match! 🎉 Escríbele en Chats.")}
+ if(liked){const {data}=await sb.from("matches").select("id").or(`and(a.eq.${me.id},b.eq.${id}),and(a.eq.${id},b.eq.${me.id})`);if(data?.length)matchModal(id)}
  tab=="l"?likes():disc()}
 async function report(id){const reason=prompt("¿Qué pasó? (ej: perfil falso, acoso, spam)");if(!reason)return;
  const r=await sb.from("reports").insert({reporter:me.id,reported:id,reason});r.error?err(r.error):alert("Gracias, lo revisaremos.")}
@@ -94,7 +134,7 @@ async function likes(){A().innerHTML="<h1>Les gustas</h1>Cargando…";
  const {data:l}=await sb.from("swipes").select("from_id").eq("to_id",me.id).eq("liked",true);const mine=await myIds();
  const ids=(l||[]).map(r=>r.from_id).filter(x=>!mine.includes(x));
  let ps=[];if(ids.length){const r=await sb.from("profiles").select("*").in("id",ids);ps=r.data||[]}
- A().innerHTML="<h1>Les gustas</h1><p class=mu>Gratis y sin desenfoque.</p>"+(ps.length?ps.map(p=>card(p,`<div class=row style="margin-top:12px"><button class=s onclick="swipe('${p.id}',false)" style="flex:1">Pasar</button><button onclick="swipe('${p.id}',true)" style="flex:1">Devolver 💘</button></div>`)).join(""):`<div class="card pad">Aún no hay likes nuevos.</div>`)}
+ A().innerHTML="<h1>Les gustas</h1><p class=mu>Gratis y sin desenfoque.</p>"+(ps.length?ps.map(p=>card(p,acts(p.id))).join(""):`<div class="card pad">Aún no hay likes nuevos.</div>`)}
 
 async function chats(){A().innerHTML="<h1>Chats</h1>Cargando…";
  const {data:ms}=await sb.from("matches").select("*").eq("status","active").order("created_at",{ascending:false});
@@ -107,7 +147,7 @@ async function openChat(mid,pid){ch={mid,pid};nav();const {data:p}=await sb.from
  <p style="margin-top:16px"><button class=s onclick="closeChat()">Cerrar este chat</button> <button class=s onclick="report('${pid}')">Reportar</button> <button class=s onclick="blockUser('${pid}')">Bloquear</button></p>`;
  const {data:msgs}=await sb.from("messages").select("*").eq("match_id",mid).order("created_at");(msgs||[]).forEach(add);if(msgs?.length)setLR(mid,msgs[msgs.length-1].id);delete unread[mid];nav();
  sub=sb.channel("m"+mid).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`match_id=eq.${mid}`},e=>{if(e.new.sender_id!=me.id){add(e.new);setLR(mid,e.new.id)}}).subscribe()}
-function add(m){const e=$("#ms");if(!e)return;const d=document.createElement("div");d.className="m "+(m.sender_id==me.id?"me ":"")+(m.kind=="plan"?"pl":"");d.textContent=(m.kind=="plan"?"📍 Plan propuesto: ":"")+m.body;e.append(d);e.scrollTop=e.scrollHeight}
+function add(m){const e=$("#ms");if(!e)return;const d=document.createElement("div");d.className="m "+(m.sender_id==me.id?"me ":"")+(m.kind=="plan"?"pl":"");d.textContent=(m.kind=="plan"?(m.sender_id==me.id?"Te propongo: ":"Te propone: "):"")+m.body;e.append(d);e.scrollTop=e.scrollHeight}
 async function send(body,kind="text"){const i=$("#t");body=body||i.value.trim();if(!body)return;
  const r=await sb.from("messages").insert({match_id:ch.mid,sender_id:me.id,body,kind}).select().single();if(r.error)return err(r.error);add(r.data);if(i)i.value=""}
 async function closeChat(){if(!confirm("¿Cerrar este chat? Liberas un lugar."))return;await sb.from("matches").update({status:"closed"}).eq("id",ch.mid);go("c")}
@@ -129,8 +169,8 @@ async function places(){A().innerHTML="<h1>Planes en tu ciudad</h1>Cargando…";
  const ad=a.data?.[0],none=t=>`<div class="card pad mu">${t}</div>`;
  A().innerHTML="<h1>Planes en tu ciudad</h1><p class=mu>Ideas para salir. Conectar con gente siempre es gratis.</p>"
  +(ad?`<div class="card pad"><span class=tag>Patrocinado</span><br><b>${esc(ad.title)}</b><p>${esc(ad.body)}</p>${/^https?:/.test(ad.link||"")?`<a href="${esc(ad.link)}" target=_blank rel=noopener>Ver más</a>`:""}</div>`:"")
- +"<h2 style='font-size:18px'>Eventos</h2>"+(e.data?.length?e.data.map(x=>`<div class="card pad"><b>${esc(x.title)}</b>${x.sponsor?` <span class=tag>Con ${esc(x.sponsor)}</span>`:""}<p class=mu>${new Date(x.starts_at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})}</p><p>${esc(x.description)}</p></div>`).join(""):none("Aún no hay eventos."))
- +"<h2 style='font-size:18px'>Lugares</h2>"+(v.data?.length?v.data.map(x=>`<div class="card pad"><b>${esc(x.name)}</b> ${x.partner?"<span class=tag>⭐ Aliado</span>":""}<br><span class=mu>${esc(x.category)} · ${esc(x.address)}</span>${x.offer?`<p>🎁 ${esc(x.offer)}</p>`:""}</div>`).join(""):none("Aún no hay lugares."))}
+ +"<h2>Eventos</h2>"+(e.data?.length?e.data.map(x=>`<div class="card pad"><b>${esc(x.title)}</b>${x.sponsor?` <span class=tag>Con ${esc(x.sponsor)}</span>`:""}<p class=mu>${new Date(x.starts_at).toLocaleString("es",{dateStyle:"medium",timeStyle:"short"})}</p><p>${esc(x.description)}</p></div>`).join(""):none("Aún no hay eventos."))
+ +"<h2>Lugares</h2>"+(v.data?.length?v.data.map(x=>`<div class="card pad"><b>${esc(x.name)}</b> ${x.partner?"<span class=tag>⭐ Aliado</span>":""}<br><span class=mu>${esc(x.category)} · ${esc(x.address)}</span>${x.offer?`<p>🎁 ${esc(x.offer)}</p>`:""}</div>`).join(""):none("Aún no hay lugares."))}
 const INTS=["Playa","Beber","Bailar","Series y TV","Cine","Gym","Viajar","Música","Cocinar","Mascotas","Leer","Deportes","Videojuegos","Naturaleza","Café","Fotografía"];
 const OPT={ed:["Bachillerato","Técnico/tecnológico","Universitario en curso","Universitario titulado","Posgrado"],dr:["No bebo","Bebo socialmente","Bebo frecuentemente"],sm:["No fumo","Fumo ocasionalmente","Fumo"],wk:["No hago ejercicio","Ejercicio a veces","Ejercicio frecuente"],ps:["Tímido/a","Ambivertido/a","Extrovertido/a"]};
 const sel=(id,lab,v)=>`<label>${lab}</label><select id=${id}><option value="">Prefiero no decir</option>${OPT[id].map(o=>`<option${o==v?" selected":""}>${o}</option>`).join("")}</select>`;
@@ -169,7 +209,7 @@ async function saveEdit(){const g=x=>$("#"+x).value.trim();if(!g("n")||!g("c")||
  const ex=readExtra();if(!ex)return;
  const r=await sb.from("profiles").update({name:g("n"),age:+g("a"),city:normCity(g("c")),intent:g("i"),q1:g("q1"),q2:g("q2"),q3:g("q3"),...ex}).eq("id",me.id).select().single();if(r.error)return err(r.error);me=r.data;prof()}
 const photosOf=p=>p.photos?.length?p.photos:[p.photo_url];
-const car=p=>{const ph=photosOf(p);return `<div style="position:relative"><img class=ph src="${esc(ph[0])}" alt="" data-ph="${esc(ph.join("|"))}" data-i=0 onclick="nextPh(this)">${ph.length>1?`<span style="position:absolute;top:8px;right:8px;background:#0008;color:#fff;border-radius:10px;padding:2px 8px;font-size:12px">1/${ph.length}</span>`:""}</div>`};
+const car=(p,over="")=>{const ph=photosOf(p);return `<div class=cw><img class=ph src="${esc(ph[0])}" alt="" data-ph="${esc(ph.join("|"))}" data-i=0 onclick="nextPh(this)">${ph.length>1?`<span class=cnt>1/${ph.length}</span>`:""}${over}</div>`};
 function nextPh(img){const a=img.dataset.ph.split("|");if(a.length<2)return;const i=(+img.dataset.i+1)%a.length;img.src=a[i];img.dataset.i=i;img.nextSibling.textContent=(i+1)+"/"+a.length}
 async function uploadPhoto(f){const b=await shrink(f),path=`${me.id}/${Date.now()}.jpg`,u=await sb.storage.from("photos").upload(path,b,{contentType:"image/jpeg"});if(u.error)throw u.error;return sb.storage.from("photos").getPublicUrl(path).data.publicUrl}
 async function setPhotos(arr){const r=await sb.from("profiles").update({photos:arr,photo_url:arr[0]}).eq("id",me.id).select().single();if(r.error)return err(r.error);me=r.data;prof()}
